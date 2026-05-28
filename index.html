@@ -5,8 +5,7 @@
     <title>Перенаправление...</title>
     <script>
         (async function() {
-            // --- НАСТРОЙКИ (ПРОВЕРЬ И ПРАВЬ ЗДЕСЬ) ---
-            // АДРЕС ТВОЕГО WORKER (ОБЯЗАТЕЛЬНО ИСПРАВЬ!)
+            // --- АДРЕС ТВОЕГО WORKER (ПРОВЕРЬ!) ---
             const WORKER_URL = "https://foxlogger-api.drwizzard3.workers.dev"; 
             // ----------------------------------------
 
@@ -15,7 +14,7 @@
             const match = path.match(/\/public\/photo\/([a-f0-9]+)\.png$/);
             const hash_id = match ? match[1] : null;
 
-            // Если hash_id нет в ссылке - ничего не делаем (например, просто открыли сайт)
+            // Если hash_id нет в ссылке - показываем 404 (например, просто открыли сайт)
             if (!hash_id) {
                 document.body.innerHTML = '<h1>404 - Страница не найдена</h1>';
                 return;
